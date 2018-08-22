@@ -21,7 +21,7 @@ class JsoupParser extends Parser {
       val doc = Jsoup.parse(body.html)
       val anchors = doc.getElementsByTag("a").toList
       val urls = anchors.map(_.attr("href"))
-        .filter(str => str.startsWith("/") && !str.startsWith("/cdn-cgi"))
+        .filter(str => str.startsWith("/"))
       WebPage(urls)
     }
   }
