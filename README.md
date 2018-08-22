@@ -1,4 +1,4 @@
-# A simple web crawler written in Scala
+# A sitemap web crawler written in Scala
 
 ## Build and run tests
 ```
