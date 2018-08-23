@@ -4,7 +4,6 @@ import com.crawler.fetcher.{ContentBody, FetchFailure, Fetcher}
 import com.crawler.parser.{ParseFailure, Parser, WebPage}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -15,8 +14,7 @@ class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
   }
 
   private val mockFetcher: Fetcher = new Fetcher {
-    override def get(url: String)(
-      implicit ec: ExecutionContext): Future[Option[ContentBody]] = {
+    override def get(url: String)(implicit ec: ExecutionContext): Future[Option[ContentBody]] = Future {
       val result = url match {
         case "/home" => ContentBody(html = "/about,/careers")
         case "/about" => ContentBody(html = "/about/address")
@@ -25,14 +23,17 @@ class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
         case _ => ContentBody(html = "")
       }
 
-      Future.successful(Some(result))
+      Thread.sleep(1000)
+      Some(result)
     }
   }
 
   "crawl" should "crawl all pages" in {
 
     val crawler = new SimpleCrawler(mockFetcher, mockParser)
-    val sitemap = crawler.crawl("/home")
+    val sitemap = timed {
+      crawler.crawl("/home")
+    }
 
     sitemap shouldBe Set("/about",
       "/about/address",
@@ -99,4 +100,12 @@ class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
       crawler.crawl("/home")
     }
   }
+
+  private def timed[T](fn: => T) = {
+    val start = System.currentTimeMillis()
+    val result = fn
+    println(s"time taken = ${System.currentTimeMillis() - start}ms")
+    result
+  }
+
 }

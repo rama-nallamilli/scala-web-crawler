@@ -5,7 +5,7 @@ import com.crawler.parser.{Parser, WebPage}
 
 import scala.annotation.tailrec
 import scala.collection.immutable.HashSet
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -18,6 +18,26 @@ trait Crawler {
 }
 
 class SimpleCrawler(fetcher: Fetcher, parser: Parser) extends Crawler with Logging {
+
+  /*
+
+  Scala Exercise
+  **************
+
+  The current crawler implementation is quite slow as it synchronously fetches
+  each url per iteration, before moving onto the next one.
+
+  Update the method to return a future as follows:
+
+    def _crawl(currentUrls: List[String], sitemap: HashSet[String]): Future[Set[String]]
+
+  For each level fetch pages concurrently
+
+  Tips:
+    1. Future.sequence can transform a List[Future[A]] => Future[List[A]]
+    2. extractNonVisitedUrls may be useful to filter urls from fetched pages
+  */
+
 
   def crawl(webUrl: String): Set[String] = {
 
@@ -34,7 +54,7 @@ class SimpleCrawler(fetcher: Fetcher, parser: Parser) extends Crawler with Loggi
             .getOrElse(Nil)
             .filterNot(sitemap.contains)
 
-          _crawl(nextUrls ++ tail, sitemap ++ currentUrls.toSet)
+          _crawl(tail ++ nextUrls, sitemap ++ currentUrls.toSet)
         case Nil => sitemap
       }
 
