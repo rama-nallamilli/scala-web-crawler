@@ -10,12 +10,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
 
-  private val mockParser: Parser = new Parser {
-    override def parsePageContent(body: ContentBody)(
-      implicit ec: ExecutionContext): Future[WebPage] = {
-      Future.successful(
-        WebPage(urls = body.html.split(",").filter(_.nonEmpty).toList))
-    }
+  private val mockParser: Parser = (body: ContentBody) => {
+    WebPage(urls = body.html.split(",").filter(_.nonEmpty).toList)
   }
 
   private val mockFetcher: Fetcher = new Fetcher {
@@ -38,7 +34,7 @@ class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
     val crawler = new SimpleCrawler(mockFetcher, mockParser)
     val sitemap = crawler.crawl("/home")
 
-    sitemap.futureValue shouldBe Set("/about",
+    sitemap shouldBe Set("/about",
       "/about/address",
       "/careers",
       "/careers/jobs",
@@ -64,7 +60,7 @@ class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
     val crawler = new SimpleCrawler(fetcherWithCircularRef, mockParser)
     val sitemap = crawler.crawl("/home")
 
-    sitemap.futureValue shouldBe Set("/about",
+    sitemap shouldBe Set("/about",
       "/about/address",
       "/careers",
       "/home")
@@ -72,16 +68,13 @@ class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
 
   it should "fail fast if there is a parsing error" in {
 
-    val failingParser: Parser = new Parser {
-      override def parsePageContent(body: ContentBody)(
-        implicit ec: ExecutionContext): Future[WebPage] =
-        Future.failed(ParseFailure("parsing failure!"))
-    }
+    val failingParser: Parser = (body: ContentBody) => throw ParseFailure("parsing failure!")
 
     val crawler = new SimpleCrawler(mockFetcher, failingParser)
 
-    val sitemap = crawler.crawl("/home")
-    sitemap.failed.futureValue shouldBe ParseFailure("parsing failure!")
+    assertThrows[ParseFailure] {
+      crawler.crawl("/home")
+    }
   }
 
   it should "fail fast if there is a fetching error" in {
@@ -102,8 +95,8 @@ class CrawlerSpec extends FlatSpec with ScalaFutures with Matchers {
 
     val crawler = new SimpleCrawler(failingFetcher, mockParser)
 
-    val sitemap = crawler.crawl("/home")
-    sitemap.failed.futureValue shouldBe FetchFailure(
-      "Failed to fetch /careers, statuscode=500")
+    assertThrows[FetchFailure] {
+      crawler.crawl("/home")
+    }
   }
 }

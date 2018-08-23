@@ -3,7 +3,6 @@ package com.crawler.parser
 import com.crawler.fetcher.ContentBody
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{FlatSpec, Matchers}
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class ParserSpec extends FlatSpec with ScalaFutures with Matchers {
 
@@ -22,7 +21,7 @@ class ParserSpec extends FlatSpec with ScalaFutures with Matchers {
         """.stripMargin)
 
     val parser = new JsoupParser()
-    parser.parsePageContent(body).futureValue shouldBe WebPage(List("/about", "/blog"))
+    parser.parsePageContent(body) shouldBe WebPage(List("/about", "/blog"))
   }
 
   it should "ignore urls to external websites" in {
@@ -40,11 +39,11 @@ class ParserSpec extends FlatSpec with ScalaFutures with Matchers {
         """.stripMargin)
 
     val parser = new JsoupParser()
-    parser.parsePageContent(body).futureValue shouldBe WebPage(List("/about", "/blog"))
+    parser.parsePageContent(body) shouldBe WebPage(List("/about", "/blog"))
   }
 
   it should "return no urls for malformed content" in {
     val parser = new JsoupParser()
-    parser.parsePageContent(ContentBody("%$£@")).futureValue shouldBe WebPage(urls = Nil)
+    parser.parsePageContent(ContentBody("%$£@")) shouldBe WebPage(urls = Nil)
   }
 }

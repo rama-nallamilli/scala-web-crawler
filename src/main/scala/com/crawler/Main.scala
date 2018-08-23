@@ -6,10 +6,7 @@ import com.crawler.fetcher.PlayWsHttpFetcher
 import com.crawler.parser.JsoupParser
 import play.api.libs.ws.ahc.StandaloneAhcWSClient
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
 import scala.util.Try
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends App with Logging {
 
@@ -24,7 +21,7 @@ object Main extends App with Logging {
   val crawler = new SimpleCrawler(fetcher, parser)
 
   val start = System.currentTimeMillis()
-  val result = Await.result(crawler.crawl("/"), 2.minutes)
+  val result = crawler.crawl("/")
   log(s"\n$host\n\n${result.toList.sorted.mkString("\n")}")
   log(s"\n Completed in ${System.currentTimeMillis() - start} ms")
 }
